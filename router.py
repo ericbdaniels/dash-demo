@@ -45,11 +45,13 @@ class Router:
 
         @dashapp.callback(
             dash.dependencies.Output("page-content", "children"),
-            [dash.dependencies.Input("url", "pathname")],
-            [dash.dependencies.State("url", "search")],
+            [
+                dash.dependencies.Input("url", "pathname"),
+            ],
         )
-        def display_page(pathname: str, search: str = None):
-            if search:
+        def display_page(pathname: str):
+            if "?" in pathname:
+                pathname, search = pathname.split("?")
                 query_dict = dict(parse.parse_qsl(search[1:]))
                 return self.dispatch(pathname, **query_dict)
             else:

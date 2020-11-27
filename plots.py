@@ -1,8 +1,9 @@
 import plotly.graph_objs as go
+import dash_core_components as dcc
 
 
-def histogram(*args):
-    f = go.Figure()
-    for a in args:
-        f.add_histogram(x=a)
+def histogram(**kwargs):
+    f = go.Figure(layout_template="none")
+    for name, data in kwargs.items():
+        f.add_histogram(x=data, name=name)
     return f

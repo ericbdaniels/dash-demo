@@ -2,6 +2,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output, State
 from router import Router
 from template import template_layout
 import plots
@@ -39,12 +40,12 @@ multi_select_submit = html.Button(
 
 
 @app.callback(
-    dash.dependencies.Output("url", "pathname"),
+    Output("url", "pathname"),
     [
-        dash.dependencies.Input("single-select-dropdown", "value"),
-        dash.dependencies.Input("multi-select-submit", "n_clicks"),
+        Input("single-select-dropdown", "value"),
+        Input("multi-select-submit", "n_clicks"),
     ],
-    dash.dependencies.State("multi-select-dropdown", "value"),
+    State("multi-select-dropdown", "value"),
 )
 def load_page(single_value, n_clicks, multi_values):
     trigger = dash.callback_context.triggered
@@ -62,27 +63,76 @@ def index():
     return template_layout(
         dbc.Container(
             [
-                dbc.Row(dbc.Col(single_select, width=2)),
                 dbc.Row(
+                    dbc.Col(
+                        [
+                            dcc.Markdown(
+                                """# Dash-Demo: A simple multipage Dash app"""
+                            ),
+                            dcc.Markdown(
+                                """This basic app demonstrates a handful of Dash features described in the blog post linked below."""
+                            ),
+                            dcc.Markdown(
+                                "[geostats.dev](https://geostats.dev/python/plotly/dash/flask/dash%20bootstrap%20components/2020/11/26/dash-post.html)"
+                            ),
+                        ]
+                    )
+                ),
+                dbc.Container(
                     [
-                        dbc.Col(multi_select, width=6),
-                        dbc.Col(multi_select_submit, width=2),
-                    ]
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    html.Label("Select Single Distribution:   "),
+                                    width=3,
+                                ),
+                                dbc.Col(single_select, width=4),
+                            ],
+                        ),
+                        dbc.Row(dbc.Col(html.P("OR", className="display-4"))),
+                        dbc.Row(
+                            [
+                                dbc.Col(
+                                    html.Label("Select Multiple Distributions:   "),
+                                    width=3,
+                                ),
+                                dbc.Col(multi_select, width=4),
+                                dbc.Col(multi_select_submit, width=2),
+                            ]
+                        ),
+                    ],
+                    className="m-5 p-5 shadow border mx-auto bg-light",
                 ),
             ]
         )
     )
 
 
-@router.route("/univariate/<column_name>")
-def univariate_stats(column_name):
-    return template_layout(dcc.Graph(figure=plots.histogram(data[column_name])))
+@router.route("/univariate/<distribution_name>")
+def univariate_stats(distribution_name):
+    return template_layout(
+        dcc.Graph(
+            figure=plots.histogram(distribution_name=data[distribution_name]),
+            style={"height": "80vh"},
+            config={
+                "displaylogo": False,
+            },
+        )
+    )
 
 
 @router.route("/multivariate")
 def multivariate_stats(**kwargs):
-    data_to_plot = [data[v] for k, v in kwargs.items()]
-    return template_layout(dcc.Graph(figure=plots.histogram(*data_to_plot)))
+    data_to_plot = {v: data[v] for k, v in kwargs.items()}
+    return template_layout(
+        dcc.Graph(
+            figure=plots.histogram(**data_to_plot),
+            style={"height": "80vh"},
+            config={
+                "displaylogo": False,
+            },
+        )
+    )
 
 
 if __name__ == "__main__":
